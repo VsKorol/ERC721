@@ -1,0 +1,114 @@
+pragma solidity 0.4.24;
+
+import "../openzeppelin-solidity-master/contracts/token/ERC721/ERC721.sol";
+
+
+contract VRLand is ERC721, ERC721Token {
+    struct Coord {
+        uint256 bottom;
+        uint256 right;
+        uint256 top;
+        uint256 left;
+    };
+
+    name_ = "VRLand";
+    symbol_="VRL";
+    address superUser_;
+    address objectsAddress_;
+    uint8 priceAddLevel_;
+    uint8 numOfWorld_;
+    
+    //Count of lands level
+    mapping(uint256=>uint8) levelOfLand_;
+    //ground zero altitude relative to world zero
+    mapping(uint256=>uint8) zeroLevelOfLand_;
+    //basic world coordinate
+    mapping(uint8=>Coord) worldCoord_;
+    //basic world surface
+    mapping(uint8=>uint256) worldSurface_;
+    mapping(uint256=>uint256) worldSurfaceLevel_;
+    
+    mapping(uint256=>uint256) managerOfLand_;
+    mapping(uint256=>uint256[]) landsManager_;
+
+    mapping(uint256=>address) managerOfUser_;
+    mapping(uint256=>address) usersManager_;
+/////////////////////////////////////////////////////////////////
+
+    function levelOfLand(uint256 lLand) external view returns (uint8) {
+        return levelOfLand_[lLand];
+    }
+
+    function zeroLevelOfLand(uint256 lLand) external view returns (uint8) {
+        return zeroLevelOfLand_[lLand];
+    }
+
+    function worldCoord(uint256 lLand) external view returns (Coord) {
+        return worldCoord_[lLand];
+    } 
+
+    function worldSurfaceLevel(uint8 lWorld) external view returns (uint256) {
+        return worldSurfaceLevel_[lWorld];
+    }
+
+    function worldSurface(uint256 lLand) external view returns (uint8) {
+        return worldSurface_[lWorld];
+    }
+
+    function setZeroLevelOfLand(uint256 lLand, uint8 lLevel) external {
+        setZeroLevelOfLandI(lLand, lLevel);
+    }
+    
+    function setZeroLevelOfLandI(uint256 lLand, uint8 lLevel) private {
+        require(msg.sender == ownerOf(lLand));
+        require((lLevel+levelOfLand_[lLand]) > worldSurfaceLevel_[lLand]);
+        require(lLevel < worldSurfaceLevel_[lLand]);
+        zeroLevelOfLand_[lLand] = lLevel;
+    }
+    
+    function addLevelOfLand(uint256 lLand) payable external {
+        require(msg.value > priceAddLevel_);
+        setAddLevelOfLand(lLand);
+    }
+
+    function addLevelOfLandI(uint256 lLand) private {
+        levelOfLand_[lLand]++;
+    }
+
+    function createNewWorldI(Coord lCoordinate, uint256 lSurface) private {
+        uint8 i=0;
+        while (i < numOfWorld_) {
+            require(intersectionRegion(lCoordinate, i));
+        }
+    }
+
+    function intersectionRegion(Coord lCoordinate, uint8 i) private {
+        return(lCoordinate.left > worldCoord_[i].right || lCoordinate.right < worldCoord_[i].left || lCoordinate.top < worldCoord_[i].bottom || lCoordinate.bottom > worldCoord_[i].top);
+    }
+/////////////////////////////////////////////////////////////////
+
+    function changeObjAdress(address lObjectsAddress) {
+        require(msg.sender == superUser_);
+        superUser_ = lObjectsAddress;
+    }
+
+    function objectsAddress () external view returns(address){
+        return objectsAddress_;
+    }
+
+    function managerOfLand(uint256 lLand) external view returns(uint256) {
+        return managerOfLand_[lLand];
+    }
+    
+    function landsManager(uint256 lLand) external view returns(uint256) {
+        return landsManager_[lLand];
+    }
+
+    function managerOfUser(uint256 lUser) external view returns(uint256) {
+        return managerOfUser_[lUser];
+    }
+
+    function usersManager(uint256 lUser) external view returns(uint256) {
+        return usersManager_[lUser];
+    }
+}
